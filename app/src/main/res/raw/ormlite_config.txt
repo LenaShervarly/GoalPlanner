@@ -1,0 +1,42 @@
+# --table-start--
+dataClass=com.shervarly.lena.goalplanner.dbmodule.CategoryDTO
+tableName=Categories
+# --table-fields-start--
+# --field-start--
+fieldName=categoryId
+generatedId=true
+# --field-end--
+# --field-start--
+fieldName=categoryTitle
+# --field-end--
+# --table-fields-end--
+# --table-end--
+#################################
+
+#################################
+# --table-start--
+dataClass=com.shervarly.lena.goalplanner.dbmodule.GoalDTO
+tableName=Goals
+# --table-fields-start--
+# --field-start--
+fieldName=goalId
+generatedId=true
+# --field-end--
+# --field-start--
+fieldName=timeFrame
+# --field-end--
+# --field-start--
+fieldName=category
+canBeNull = false
+foreign = true
+foreignAutoRefresh = true
+# --field-end--
+# --field-start--
+fieldName=goalName
+# --field-end--
+# --field-start--
+fieldName=timeCreated
+# --field-end--
+# --table-fields-end--
+# --table-end--
+#################################

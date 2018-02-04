@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GoalPlanner</string>
+    <string name="titleForCheckGoalsPage">Check my goals for the next:</string>
+    <string name="my_goals_title_1st_part">My goals </string>
+    <string name="_12_weeks">12 weeks</string>
+    <string name="_3_years">3 years</string>
+    <string name="_10_years">10 years</string>
+    <string name="edit">Edit</string>
+</resources>
