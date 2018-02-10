@@ -23,8 +23,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-
     <Button
         android:id="@+id/task_delete"
         android:layout_width="29dp"
@@ -42,7 +40,8 @@
         app:layout_constraintStart_toEndOf="@+id/goal_title"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
-        android:layout_marginRight="21dp"/>
+        android:layout_margin="21dp"
+        app:layout_goneMarginBottom="5dp"/>
 
     <TextView
         android:id="@+id/timeCreated"
@@ -51,11 +50,11 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/task_delete"
-        android:layout_marginEnd="3dp"
-        android:layout_marginRight="3dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
         android:ems="10"
         android:fontFamily="@font/volkhov"
-        android:gravity="end"
+        android:gravity="start"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -75,6 +74,6 @@
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@+id/timeCreated"
         app:layout_constraintEnd_toStartOf="@+id/timeCreated"
-        android:gravity="center_horizontal"/>
+        android:gravity="end"/>
 
 </android.support.constraint.ConstraintLayout>

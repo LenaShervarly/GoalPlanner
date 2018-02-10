@@ -1,35 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.shervarly.lena.goalplanner.CategoryActivity">
+    <include
+        layout="@layout/toolbar_primary"
+        android:id="@+id/toolbar" />
 
-    <TextView
-        android:id="@+id/my_goals_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/volkhov"
-        android:padding="15dp"
-        android:text="Choose a category or create a new one"
-        android:textAlignment="center"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="30sp"
-        android:textStyle="italic"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.032" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingBottom="2dp">
-
+        android:paddingBottom="2dp"
+        android:paddingTop="20dp">
 
         <EditText
             android:id="@+id/new_Category"
@@ -43,15 +28,14 @@
             android:inputType="text"
             android:textAppearance="@style/TextAppearance.AppCompat"
             android:textSize="16sp" />
-
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/add_button"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_gravity="end"
             android:layout_marginRight="15dp"
             android:layout_weight="0"
-            android:background="@drawable/icons8plus500"
+            android:background="@drawable/add_orange"
             android:onClick="addCategory"
             android:paddingRight="20dp" />
     </LinearLayout>

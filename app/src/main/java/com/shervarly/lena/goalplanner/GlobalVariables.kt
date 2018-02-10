@@ -1,6 +1,8 @@
 package com.shervarly.lena.goalplanner
 
 import android.content.Context
+import android.support.v7.widget.Toolbar
+import android.view.View
 import android.widget.ArrayAdapter
 import com.j256.ormlite.android.apptools.OpenHelperManager
 import dbmodule.DatabaseHelper

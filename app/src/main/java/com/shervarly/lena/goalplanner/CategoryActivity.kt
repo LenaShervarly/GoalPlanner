@@ -3,20 +3,27 @@ package com.shervarly.lena.goalplanner
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.view.MenuItemCompat
+import android.support.v7.app.ActionBar
+import android.support.v7.widget.Toolbar
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
-import com.j256.ormlite.android.apptools.OpenHelperManager
+import android.support.v7.widget.ShareActionProvider
 import com.j256.ormlite.dao.Dao
 import dbmodule.CategoryDTO
 import dbmodule.DatabaseHelper
 import kotlinx.android.synthetic.main.item_category.view.*
 import java.sql.SQLException
 
+lateinit var timeFrame: String
+
 class CategoryActivity : AppCompatActivity() {
     private lateinit var categoryListView: ListView
-    private lateinit var timeFrame: String
+
     private lateinit var categoryDAO: Dao<CategoryDTO, Int>
     private lateinit var databaseHelper: DatabaseHelper
     private var selectedCategory: Int = 0
@@ -24,7 +31,15 @@ class CategoryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_category)
-        timeFrame = intent.getStringExtra(TIME_FRAME)
+        val toolbar: Toolbar? = findViewById(R.id.toolbar)
+        if (toolbar != null)
+            setSupportActionBar(toolbar)
+        val actionBar: ActionBar? = getSupportActionBar()
+        actionBar?.setDisplayHomeAsUpEnabled(true)
+        val tempTimeFrame: String? = intent.getStringExtra(TIME_FRAME)
+        if(tempTimeFrame != null)
+            timeFrame = tempTimeFrame
+
         categoryListView = findViewById(R.id.category_list)
         categoryListView.setOnItemLongClickListener{ parent, view, position, id ->
             selectedCategory = position
@@ -79,11 +94,22 @@ class CategoryActivity : AppCompatActivity() {
         updateUI()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if(databaseHelper!= null){
-            OpenHelperManager.releaseHelper()
-            databaseHelper.close()
-        }
+    lateinit var shareActionProvider: ShareActionProvider
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        getMenuInflater().inflate(R.menu.main_menu, menu)
+        val shareButton: MenuItem = menu.findItem(R.id.action_share)
+        shareActionProvider = MenuItemCompat.getActionProvider(shareButton) as ShareActionProvider
+        setShareActionIntent("Wanna check my categories?")
+        return super.onCreateOptionsMenu(menu)
     }
+
+
+    private fun setShareActionIntent(message: String) {
+        val intent: Intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TEXT, message)
+        shareActionProvider.setShareIntent(intent)
+    }
+
 }

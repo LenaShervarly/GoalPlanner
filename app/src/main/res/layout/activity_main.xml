@@ -1,104 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.shervarly.lena.goalplanner.MainActivity"
-    tools:layout_editor_absoluteY="81dp">
+    tools:layout_editor_absoluteY="81dp"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar_primary"
+        app:layout_constraintBottom_toTopOf="@+id/textView2" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
 
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="6dp"
-        android:layout_marginEnd="36dp"
-        android:layout_marginStart="37dp"
-        android:fontFamily="@font/volkhov"
-        android:gravity="center"
-        android:padding="15dp"
-        android:text="@string/titleForCheckGoalsPage"
-        android:textAlignment="center"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="40sp"
-        android:textStyle="italic"
-        app:layout_constraintBottom_toTopOf="@+id/goalsFor10Years"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.821" />
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@+id/textView2"
+            tools:layout_editor_absoluteX="16dp">
 
-    <Button
-        android:id="@+id/goalsFor10Years"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView2"
-        android:layout_toLeftOf="@+id/goalsFor3Years"
-        android:layout_toStartOf="@+id/goalsFor3Years"
-        android:background="@drawable/my_hexagon_button"
-        android:fontFamily="@font/volkhov"
-        android:onClick="checkPage"
-        android:text="@string/_10_years"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="24sp"
-        android:textStyle="italic"
-        app:layout_constraintBaseline_toBaselineOf="@+id/goalsFor3Years"
-        app:layout_constraintEnd_toStartOf="@+id/goalsFor3Years"
-        app:layout_constraintRight_toLeftOf="@id/goalsFor3Years"
-        app:layout_constraintStart_toStartOf="parent" />
+            <Button
+                android:id="@+id/goalsFor10Years"
+                android:layout_width="150dp"
+                android:layout_height="140dp"
+                android:layout_below="@+id/textView2"
+                android:background="@drawable/yellow_hexagon"
+                android:elevation="8dp"
+                android:fontFamily="@font/volkhov"
+                android:onClick="checkPage"
+                android:text="@string/_10_years"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="24sp"
+                android:textStyle="italic" />
 
-    <Button
-        android:id="@+id/goalsFor3Years"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/goalsFor10Years"
-        android:layout_alignBottom="@+id/goalsFor10Years"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/my_hexagon_button"
-        android:fontFamily="@font/volkhov"
-        android:onClick="checkPage"
-        android:text="@string/_3_years"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="24sp"
-        android:textStyle="italic"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/goalsFor10Years"
-        app:layout_constraintTop_toTopOf="@+id/textView2"
-        app:layout_constraintVertical_bias="0.42" />
+            <Button
+                android:id="@+id/goalsFor3Years"
+                android:layout_width="150dp"
+                android:layout_height="140dp"
+                android:background="@drawable/yellow_hexagon"
+                android:elevation="8dp"
+                android:fontFamily="@font/volkhov"
+                android:onClick="checkPage"
+                android:text="@string/_3_years"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="24sp"
+                android:textStyle="italic" />
 
-    <Button
-        android:id="@+id/goalsFor12Weeks"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/goalsFor3Years"
-        android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/goalsFor3Years"
-        android:layout_marginBottom="88dp"
-        android:layout_marginEnd="108dp"
-        android:layout_marginStart="108dp"
-        android:background="@drawable/my_hexagon_button"
-        android:fontFamily="@font/volkhov"
-        android:onClick="checkPage"
-        android:text="@string/_12_weeks"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="24sp"
-        android:textStyle="italic"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/goalsFor10Years"
-        app:layout_constraintVertical_bias="0.329" />
+        </LinearLayout>
 
-</android.support.constraint.ConstraintLayout>
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@+id/textView2"
+            tools:layout_editor_absoluteX="16dp">
+
+            <Button
+                android:id="@+id/goalsFor12Weeks"
+                android:layout_width="150dp"
+                android:layout_height="140dp"
+                android:layout_below="@+id/textView2"
+                android:background="@drawable/yellow_hexagon_upsidedown"
+                android:elevation="8dp"
+                android:fontFamily="@font/volkhov"
+                android:onClick="checkPage"
+                android:text="@string/_12_weeks"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="24sp"
+                android:textStyle="italic"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+            <Button
+                android:id="@+id/goalsFor1Week"
+                android:layout_width="150dp"
+                android:layout_height="140dp"
+                android:layout_alignBaseline="@+id/goalsFor10Years"
+                android:layout_alignBottom="@+id/goalsFor10Years"
+                android:layout_toEndOf="@+id/goalsFor10Years"
+                android:layout_toRightOf="@+id/goalsFor10Years"
+                android:background="@drawable/yellow_hexagon_upsidedown"
+                android:elevation="8dp"
+                android:fontFamily="@font/volkhov"
+                android:onClick="checkPage"
+                android:text="@string/_1_week"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="24sp"
+                android:textStyle="italic"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/goalsFor10Years"
+                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
