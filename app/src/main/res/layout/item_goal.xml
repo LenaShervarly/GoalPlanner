@@ -33,7 +33,6 @@
         android:layout_alignParentTop="true"
         android:layout_marginBottom="3dp"
         android:background="@drawable/icons8trash"
-        android:onClick="removeGoal"
         app:layout_constraintBottom_toTopOf="@+id/timeCreated"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"

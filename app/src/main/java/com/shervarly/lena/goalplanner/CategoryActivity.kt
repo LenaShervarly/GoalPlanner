@@ -14,57 +14,38 @@ import android.widget.*
 import com.j256.ormlite.dao.Dao
 import dbmodule.CategoryDTO
 import dbmodule.DatabaseHelper
-import dbmodule.GoalDTO
 import kotlinx.android.synthetic.main.item_category.view.*
 import java.sql.SQLException
-import java.text.DateFormat
 
 lateinit var timeFrame: String
 var selectedPosition: Int = 0
 
 class CategoryActivity : AppCompatActivity() {
     private lateinit var categoryListView: ListView
-
     private lateinit var categoryDAO: Dao<CategoryDTO, Int>
     private lateinit var databaseHelper: DatabaseHelper
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_category)
+
         val toolbar: Toolbar? = findViewById(R.id.toolbar)
         if (toolbar != null)
             setSupportActionBar(toolbar)
         val actionBar: ActionBar? = getSupportActionBar()
         actionBar?.setDisplayHomeAsUpEnabled(true)
         val tempTimeFrame: String? = intent.getStringExtra(TIME_FRAME)
+
         if(tempTimeFrame != null)
             timeFrame = tempTimeFrame
-
-        categoryListView = findViewById(R.id.category_list)
-        categoryListView.setOnItemLongClickListener{ parent, view, position, id ->
-            selectedPosition = position
-            Toast.makeText(this, "Category was deleted", Toast.LENGTH_SHORT).show()
-            removeCategory(view)
-            true
-        }
-
-        categoryListView.setOnItemClickListener { parent, view, position, id ->
-            Toast.makeText(this, id.toString(), Toast.LENGTH_SHORT).show()
-            selectedPosition = position
-            showGoals(view)
-
-        }
 
         databaseHelper = getDBHelper(this)
         categoryDAO = databaseHelper.getCategoryDao()
         updateUI()
     }
 
-
     fun showGoals(view: View) {
         val categoryTitle =  view.category_title.text
-        println(categoryTitle)
         val intent = Intent(this, GoalsSettingActivity::class.java)
         intent.putExtra(CATEGORY_TITLE, categoryTitle)
         intent.putExtra(TIME_FRAME, timeFrame)
@@ -72,15 +53,14 @@ class CategoryActivity : AppCompatActivity() {
     }
 
     private fun updateUI(){
-        val categoryTitles = categoryDAO.queryForAll() //.map { categoryDTO -> categoryDTO.categoryTitle }
-       // categoryListView.adapter = getItemAdapter(this, R.layout.item_category, R.id.category_title, categoryTitles)
+        categoryListView = findViewById(R.id.category_list)
+        val categoryTitles = categoryDAO.queryForAll()
         categoryListView.adapter = CustomAdapter(this, R.layout.item_category, categoryTitles)
     }
 
     fun addCategory(view: View){
         val categoryField: EditText = (view.parent as View).findViewById(R.id.new_Category)
         val categoryTitle = categoryField.text.toString().capitalize()
-        print(categoryTitle)
 
         val newCategory = CategoryDTO(0, categoryTitle)
         categoryDAO.create(newCategory)
@@ -88,9 +68,9 @@ class CategoryActivity : AppCompatActivity() {
         categoryField.text.clear()
     }
 
-    fun removeCategory(view: View){
+    fun removeCategory(position: Int){
         try {
-            categoryDAO.delete(categoryDAO.queryForAll()[selectedPosition])
+            categoryDAO.delete(categoryDAO.queryForAll()[position])
             categoryListView.invalidateViews()
         } catch (e: SQLException){
             e.printStackTrace()
@@ -108,7 +88,6 @@ class CategoryActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-
     private fun setShareActionIntent(message: String) {
         val intent: Intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"
@@ -116,11 +95,10 @@ class CategoryActivity : AppCompatActivity() {
         shareActionProvider.setShareIntent(intent)
     }
 
-
     inner class CustomAdapter(context: Context, resource: Int, private val valluesList: List<CategoryDTO>): ArrayAdapter<CategoryDTO>(context, resource, valluesList) {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-            // if(position > 0)
+
             selectedPosition = position// - 1
             var convertView = convertView
             if (convertView == null) {
@@ -137,14 +115,12 @@ class CategoryActivity : AppCompatActivity() {
             categoryNameField.setOnClickListener { convertView ->
                 showGoals(convertView)
             }
-
-         //   val deleteButton = convertView?.findViewById(R.id.delete_button) as Button
-         //   deleteButton.set
+            val deleteButton = convertView?.findViewById(R.id.delete_category) as Button
+            deleteButton.setOnClickListener {view ->
+                removeCategory(position)
+            }
 
             return convertView
         }
-        //override fun setOnClickListener() {}
-
     }
-
 }

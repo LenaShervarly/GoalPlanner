@@ -22,11 +22,10 @@
         android:textStyle="italic" />
 
     <Button
-        android:id="@+id/delete_button"
+        android:id="@+id/delete_category"
         android:layout_width="29dp"
         android:layout_height="26dp"
         android:background="@drawable/icons8trash"
-        android:onClick="removeCategory"
         android:padding="5dp"
         android:layout_marginEnd="21dp"
         android:layout_marginRight="21dp"/>

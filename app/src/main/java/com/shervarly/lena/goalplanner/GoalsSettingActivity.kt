@@ -20,7 +20,6 @@ import android.widget.TextView
 import android.widget.ArrayAdapter
 import java.text.DateFormat
 
-private var selectedGoalPosition: Int = 0
 
 class GoalsSettingActivity : AppCompatActivity() {
     private lateinit var goalsListView: ListView
@@ -38,18 +37,16 @@ class GoalsSettingActivity : AppCompatActivity() {
 
         categoryTitle = intent.getStringExtra(CATEGORY_TITLE)
         timeFrame = intent.getStringExtra(TIME_FRAME)
-        val textForMyTitle = "\"$categoryTitle\" for the next $timeFrame"
+        val textForMyTitle = "\"$categoryTitle\" : $timeFrame"
 
         val toolbar: Toolbar? = findViewById(R.id.toolbar)
         if (toolbar != null) {
             setSupportActionBar(toolbar)
             supportActionBar?.title = textForMyTitle
         }
-        var actionBar: ActionBar? = getSupportActionBar()
+        var actionBar: ActionBar? = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        //val titleView: TextView = findViewById(R.id.my_goals_title)
-        //titleView.text = textForMyTitle
         databaseHelper = getDBHelper()
         goalDAO = databaseHelper.getGoalsDao()
 
@@ -58,19 +55,18 @@ class GoalsSettingActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        getMenuInflater().inflate(R.menu.main_menu, menu)
+        menuInflater.inflate(R.menu.main_menu, menu)
         val shareButton: MenuItem = menu.findItem(R.id.action_share)
         shareActionProvider = MenuItemCompat.getActionProvider(shareButton) as ShareActionProvider
         val message = StringBuilder()
         message.append("Just look! My goals for the next $timeFrame are: \n")
         goalDAO.queryForAll()
-               // .filter { goalDTO ->  goalDTO.category == categoryTitle && goalDTO.timeFrame == timeFrame}
+                .filter { goalDTO ->  goalDTO.timeFrame == timeFrame}
                 .map { goalDTO -> goalDTO.goalName }
                 .forEach{goalName -> message.append(goalName + "\n")}
         setShareActionIntent(message.toString())
         return super.onCreateOptionsMenu(menu)
     }
-
 
     private fun setShareActionIntent(message: String) {
         val intent = Intent(Intent.ACTION_SEND)
@@ -78,7 +74,6 @@ class GoalsSettingActivity : AppCompatActivity() {
         intent.putExtra(Intent.EXTRA_TEXT, message)
         shareActionProvider.setShareIntent(intent)
     }
-
 
     fun addGoal(view: View){
         val goalsTextView: EditText = (view.parent as View).findViewById(R.id.new_goal)
@@ -96,24 +91,15 @@ class GoalsSettingActivity : AppCompatActivity() {
         return OpenHelperManager.getHelper(this, DatabaseHelper::class.java)
     }
 
-    /*override fun onDestroy() {
-        super.onDestroy()
-        if(databaseHelper!= null){
-            OpenHelperManager.releaseHelper()
-            databaseHelper.close()
-        }
-    }*/
-
-    fun removeGoal(view: View){
+    fun removeGoal(position: Int){
         try {
-            goalDAO.delete(goalDAO.queryForAll().get(selectedGoalPosition))
+            goalDAO.delete(goalDAO.queryForAll()[position])
             goalsListView.invalidateViews()
         } catch (e: SQLException){
             e.printStackTrace()
         }
         updateUI()
     }
-
 
     private fun updateUI(){
         allGoals = goalDAO.queryForAll()
@@ -122,25 +108,24 @@ class GoalsSettingActivity : AppCompatActivity() {
         goalsListView.adapter = CustomAdapter(this, R.layout.item_goal, allGoals)
     }
 
-
-    class CustomAdapter(context: Context, resource: Int, private val valluesList: List<GoalDTO>): ArrayAdapter<GoalDTO>(context, resource, valluesList) {
+    inner class CustomAdapter(context: Context, resource: Int, private val valluesList: List<GoalDTO>): ArrayAdapter<GoalDTO>(context, resource, valluesList) {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-           // if(position > 0)
-                selectedGoalPosition = position// - 1
             var convertView = convertView
-            if (convertView == null) {
+            if (convertView == null)
                 convertView = LayoutInflater.from(context).inflate(R.layout.item_goal, parent, false)
-            }
 
             val goalNameField = convertView?.findViewById(R.id.goal_title) as TextView
             val timeCreatedField = convertView?.findViewById(R.id.timeCreated) as TextView
+            val deleteButton = convertView?.findViewById(R.id.task_delete) as Button
 
+            deleteButton.setOnClickListener {view ->
+                removeGoal(position)
+            }
             goalNameField.text = valluesList[position].goalName
             timeCreatedField.text = DateFormat.getDateInstance(DateFormat.MEDIUM).format(valluesList[position].timeCreated)
+
             return convertView
         }
-
     }
-
 }

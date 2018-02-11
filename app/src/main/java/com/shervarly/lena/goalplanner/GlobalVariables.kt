@@ -12,9 +12,6 @@ import dbmodule.DatabaseHelper
  */
 val TIME_FRAME = "TIME_FRAME"
 val CATEGORY_TITLE = "CATEGORY_TITLE"
-fun getItemAdapter(context: Context, resItem: Int, resTitle: Int, listToFill: List<Any> = ArrayList()): ArrayAdapter<Any> {
-    return ArrayAdapter(context, resItem, resTitle, listToFill)
-}
 
 fun getDBHelper(context: Context): DatabaseHelper {
     return OpenHelperManager.getHelper(context, DatabaseHelper::class.java)
