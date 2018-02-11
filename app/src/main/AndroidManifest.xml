@@ -9,7 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:label="@string/time_frame_selection">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,16 +21,16 @@
             android:label="@string/choose_goal"
             android:launchMode="singleTop"
             android:parentActivityName=".CategoryActivity">
-        <meta-data
-            android:name="android.support.Parent_Activity"
-            android:value=".CategoryActivity" />
+            <meta-data
+                android:name="android.support.Parent_Activity"
+                android:value=".CategoryActivity" />
         </activity>
         <activity android:name=".CategoryActivity"
             android:label="@string/choose_category"
             android:parentActivityName=".MainActivity">
-        <meta-data
-            android:name="android.support.Parent_Activity"
-            android:value=".MainActivity" />
+            <meta-data
+                android:name="android.support.Parent_Activity"
+                android:value=".MainActivity" />
          </activity>
 
         <meta-data

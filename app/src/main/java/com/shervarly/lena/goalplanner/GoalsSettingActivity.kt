@@ -96,13 +96,13 @@ class GoalsSettingActivity : AppCompatActivity() {
         return OpenHelperManager.getHelper(this, DatabaseHelper::class.java)
     }
 
-    override fun onDestroy() {
+    /*override fun onDestroy() {
         super.onDestroy()
         if(databaseHelper!= null){
             OpenHelperManager.releaseHelper()
             databaseHelper.close()
         }
-    }
+    }*/
 
     fun removeGoal(view: View){
         try {
@@ -126,7 +126,8 @@ class GoalsSettingActivity : AppCompatActivity() {
     class CustomAdapter(context: Context, resource: Int, private val valluesList: List<GoalDTO>): ArrayAdapter<GoalDTO>(context, resource, valluesList) {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-            selectedGoalPosition = position//-1
+           // if(position > 0)
+                selectedGoalPosition = position// - 1
             var convertView = convertView
             if (convertView == null) {
                 convertView = LayoutInflater.from(context).inflate(R.layout.item_goal, parent, false)

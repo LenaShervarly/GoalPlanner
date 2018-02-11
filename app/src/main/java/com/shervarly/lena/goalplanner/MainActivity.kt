@@ -15,10 +15,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val toolbar: Toolbar? = findViewById(R.id.toolbar)
-        if (toolbar != null) {
+        if (toolbar != null)
             setSupportActionBar(toolbar)
-            supportActionBar?.title = resources.getString(R.string.time_frame_selection)
-        }
     }
 
     fun checkPage(view: View) {

@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">GoalPlanner</string>
-    <string name="time_frame_selection">Select time frame</string>
+    <string name="time_frame_selection">Select a time frame</string>
     <string name="my_goals_title_1st_part">My goals </string>
     <string name="_12_weeks">12 weeks</string>
     <string name="_3_years">3 years</string>

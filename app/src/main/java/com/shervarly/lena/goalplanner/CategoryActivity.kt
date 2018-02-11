@@ -1,32 +1,33 @@
 package com.shervarly.lena.goalplanner
 
+import android.annotation.TargetApi
+import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.view.MenuItemCompat
 import android.support.v7.app.ActionBar
 import android.support.v7.widget.Toolbar
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.Toast
 import android.support.v7.widget.ShareActionProvider
+import android.view.*
+import android.widget.*
 import com.j256.ormlite.dao.Dao
 import dbmodule.CategoryDTO
 import dbmodule.DatabaseHelper
+import dbmodule.GoalDTO
 import kotlinx.android.synthetic.main.item_category.view.*
 import java.sql.SQLException
+import java.text.DateFormat
 
 lateinit var timeFrame: String
+var selectedPosition: Int = 0
 
 class CategoryActivity : AppCompatActivity() {
     private lateinit var categoryListView: ListView
 
     private lateinit var categoryDAO: Dao<CategoryDTO, Int>
     private lateinit var databaseHelper: DatabaseHelper
-    private var selectedCategory: Int = 0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,15 +43,17 @@ class CategoryActivity : AppCompatActivity() {
 
         categoryListView = findViewById(R.id.category_list)
         categoryListView.setOnItemLongClickListener{ parent, view, position, id ->
-            selectedCategory = position
+            selectedPosition = position
             Toast.makeText(this, "Category was deleted", Toast.LENGTH_SHORT).show()
-            removeGoal(view)
+            removeCategory(view)
             true
         }
 
-        categoryListView.setOnItemClickListener{ parent, view, position, id ->
-            selectedCategory = position
+        categoryListView.setOnItemClickListener { parent, view, position, id ->
+            Toast.makeText(this, id.toString(), Toast.LENGTH_SHORT).show()
+            selectedPosition = position
             showGoals(view)
+
         }
 
         databaseHelper = getDBHelper(this)
@@ -59,7 +62,7 @@ class CategoryActivity : AppCompatActivity() {
     }
 
 
-    private fun showGoals(view: View) {
+    fun showGoals(view: View) {
         val categoryTitle =  view.category_title.text
         println(categoryTitle)
         val intent = Intent(this, GoalsSettingActivity::class.java)
@@ -69,8 +72,9 @@ class CategoryActivity : AppCompatActivity() {
     }
 
     private fun updateUI(){
-        val categoryTitles = categoryDAO.queryForAll().map { categoryDTO -> categoryDTO.categoryTitle }
-        categoryListView.adapter = getItemAdapter(this, R.layout.item_category, R.id.category_title, categoryTitles)
+        val categoryTitles = categoryDAO.queryForAll() //.map { categoryDTO -> categoryDTO.categoryTitle }
+       // categoryListView.adapter = getItemAdapter(this, R.layout.item_category, R.id.category_title, categoryTitles)
+        categoryListView.adapter = CustomAdapter(this, R.layout.item_category, categoryTitles)
     }
 
     fun addCategory(view: View){
@@ -84,9 +88,9 @@ class CategoryActivity : AppCompatActivity() {
         categoryField.text.clear()
     }
 
-    fun removeGoal(view: View){
+    fun removeCategory(view: View){
         try {
-            categoryDAO.delete(categoryDAO.queryForAll()[selectedCategory])
+            categoryDAO.delete(categoryDAO.queryForAll()[selectedPosition])
             categoryListView.invalidateViews()
         } catch (e: SQLException){
             e.printStackTrace()
@@ -97,7 +101,7 @@ class CategoryActivity : AppCompatActivity() {
     lateinit var shareActionProvider: ShareActionProvider
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        getMenuInflater().inflate(R.menu.main_menu, menu)
+        menuInflater.inflate(R.menu.main_menu, menu)
         val shareButton: MenuItem = menu.findItem(R.id.action_share)
         shareActionProvider = MenuItemCompat.getActionProvider(shareButton) as ShareActionProvider
         setShareActionIntent("Wanna check my categories?")
@@ -110,6 +114,37 @@ class CategoryActivity : AppCompatActivity() {
         intent.type = "text/plain"
         intent.putExtra(Intent.EXTRA_TEXT, message)
         shareActionProvider.setShareIntent(intent)
+    }
+
+
+    inner class CustomAdapter(context: Context, resource: Int, private val valluesList: List<CategoryDTO>): ArrayAdapter<CategoryDTO>(context, resource, valluesList) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
+            // if(position > 0)
+            selectedPosition = position// - 1
+            var convertView = convertView
+            if (convertView == null) {
+                convertView = LayoutInflater.from(context).inflate(R.layout.item_category, parent, false)
+            }
+
+            val categoryNameField = convertView?.findViewById(R.id.category_title) as TextView
+            categoryNameField.text = valluesList[position].categoryTitle
+            categoryNameField.tag = "categoryTitle"
+            categoryNameField.isClickable = true
+            @TargetApi(26)
+            categoryNameField.isFocusable = true
+
+            categoryNameField.setOnClickListener { convertView ->
+                showGoals(convertView)
+            }
+
+         //   val deleteButton = convertView?.findViewById(R.id.delete_button) as Button
+         //   deleteButton.set
+
+            return convertView
+        }
+        //override fun setOnClickListener() {}
+
     }
 
 }
