@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.shervarly.lena.goalplanner.CategoryActivity">
+    tools:context="com.shervarly.lena.goalplanner.ProductsSettingActivity">
     <include
         layout="@layout/toolbar_primary"
         android:id="@+id/toolbar" />
@@ -13,37 +13,36 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingBottom="2dp"
+        android:layout_marginBottom="13dp"
         android:paddingTop="20dp">
 
         <EditText
-            android:id="@+id/new_Category"
+            android:id="@+id/new_product"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
-            android:layout_weight="4"
+            android:layout_alignParentStart="true"
+            android:layout_weight="1"
             android:fontFamily="@font/garamond_regular"
-            android:hint="New Category"
-            android:paddingLeft="15dp"
+            android:hint="Product Name"
             android:inputType="text"
+            android:padding="9dp"
+            android:paddingLeft="15dp"
             android:textAppearance="@style/TextAppearance.AppCompat"
-            android:textColor="#0C0C0C"
             android:textSize="16sp" />
+
         <Button
             android:id="@+id/add_button"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:layout_gravity="end"
             android:layout_marginRight="15dp"
-            android:layout_weight="0"
             android:background="@drawable/add_orange"
-            android:onClick="addCategory"
-            android:paddingRight="20dp" />
+            android:onClick="addProduct" />
+
     </LinearLayout>
 
     <ListView
-        android:id="@+id/category_list"
+        android:id="@+id/products_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -78,19 +77,15 @@
             android:layout_height="40dp"
             android:layout_marginRight="20dp"
             android:background="@drawable/reset_basket2"
-            android:onClick="resetCategory" />
+            android:onClick="resetBasket" />
 
     </LinearLayout>
 
     <ListView
-        android:id="@+id/purchased_categories_list"
+        android:id="@+id/purchased_products_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
     </ListView>
+
 </LinearLayout>
-
-
-
-
-

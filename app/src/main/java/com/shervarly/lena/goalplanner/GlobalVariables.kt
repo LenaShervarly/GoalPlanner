@@ -10,7 +10,7 @@ import dbmodule.DatabaseHelper
 /**
  * Created by elena on 21.01.2018.
  */
-val TIME_FRAME = "TIME_FRAME"
+
 val CATEGORY_TITLE = "CATEGORY_TITLE"
 
 fun getDBHelper(context: Context): DatabaseHelper {

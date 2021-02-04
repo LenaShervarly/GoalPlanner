@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GoalPlanner</string>
+    <string name="app_name">GroceryPlanner</string>
     <string name="time_frame_selection">Select a time frame</string>
     <string name="my_goals_title_1st_part">My goals </string>
     <string name="_12_weeks">12 weeks</string>
@@ -7,7 +7,7 @@
     <string name="_10_years">10 years</string>
     <string name="edit">Edit</string>
     <string name="choose_goal">My goals</string>
-    <string name="choose_category">Choose a category</string>
+    <string name="choose_category">GroceryPlanner</string>
     <string name="add">Add</string>
     <string name="share">Share</string>
     <string name="_1_week">1 week</string>
