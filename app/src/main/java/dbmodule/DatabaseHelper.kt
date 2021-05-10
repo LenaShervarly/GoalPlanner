@@ -29,9 +29,9 @@ class DatabaseHelper(context: Context) : OrmLiteSqliteOpenHelper(context, DATABA
     }
     override fun onUpgrade(db: SQLiteDatabase?, connectionSource: ConnectionSource?, oldVersion: Int, newVersion: Int) {
         try {
-            TableUtils.dropTable<CategoryDTO, Any>(connectionSource, CategoryDTO::class.java, true)
-            TableUtils.dropTable<ProductDTO, Any>(connectionSource, ProductDTO::class.java, true)
-            onCreate(db, connectionSource)
+            //TableUtils.dropTable<CategoryDTO, Any>(connectionSource, CategoryDTO::class.java, true)
+            //TableUtils.dropTable<ProductDTO, Any>(connectionSource, ProductDTO::class.java, true)
+            //onCreate(db, connectionSource)
         } catch (e: SQLException) {
             Log.e(DatabaseHelper::class.java.name, "Unable to upgrade database from version $oldVersion to new $newVersion", e)
         }

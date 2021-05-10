@@ -1,29 +1,36 @@
 package com.shervarly.lena.goalplanner
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.Intent
+import android.database.SQLException
 import android.graphics.Paint
-import android.support.v7.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
-import android.support.v4.view.MenuItemCompat
-import android.support.v7.widget.Toolbar
-import android.support.v7.widget.ShareActionProvider
 import android.view.*
+import android.view.LayoutInflater
 import android.widget.*
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.ShareActionProvider
+import androidx.appcompat.widget.Toolbar
+import androidx.core.view.MenuItemCompat
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.j256.ormlite.dao.Dao
 import dbmodule.CategoryDTO
 import dbmodule.DatabaseHelper
 import kotlinx.android.synthetic.main.item_category.view.*
-import java.sql.SQLException
+import java.lang.StringBuilder
+import java.util.*
 
-var selectedPosition: Int = 0
 
+@RequiresApi(Build.VERSION_CODES.N)
 class CategoryActivity : AppCompatActivity() {
     private lateinit var categoryListView: ListView
     private lateinit var purchasedCategoryListView: ListView
     private lateinit var categoryDAO: Dao<CategoryDTO, Int>
     private lateinit var databaseHelper: DatabaseHelper
+    lateinit var touchHelper: ItemTouchHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,13 +52,20 @@ class CategoryActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+
     private fun updateUI(){
         categoryListView = findViewById(R.id.category_list)
         purchasedCategoryListView = findViewById(R.id.purchased_categories_list)
-        val categoryTitles = categoryDAO.queryForAll().filter { category -> !category.purchased }
-        val purchasedCategoryTitles = categoryDAO.queryForAll().filter { category -> category.purchased }
-        categoryListView.adapter = CustomAdapter(this, R.layout.item_category, categoryTitles)
+        val categoryTitles = categoryDAO.queryForEq("purchased", false);
+        val purchasedCategoryTitles = categoryDAO.queryForEq("purchased", true);
         purchasedCategoryListView.adapter = PurchasedCategoriesAdapter(this, R.layout.item_purchased, purchasedCategoryTitles)
+
+        val recyclerView: RecyclerView = findViewById(R.id.recycler_view)
+        val adapter = RecyclerViewAdapter( categoryTitles)
+        val callback: ItemTouchHelper.Callback = ItemMoveCallbackListener(adapter)
+        touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(recyclerView)
+        recyclerView.adapter = adapter
     }
 
     fun addCategory(view: View){
@@ -66,8 +80,7 @@ class CategoryActivity : AppCompatActivity() {
 
     fun resetCategory(view: View) {
         var purchasedProducts = categoryDAO.queryForAll()
-        purchasedProducts.forEach {
-            category -> category.purchased = false
+        purchasedProducts.forEach { category -> category.purchased = false
             categoryDAO.update(category)
         }
         updateUI()
@@ -89,53 +102,31 @@ class CategoryActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.main_menu, menu)
         val shareButton: MenuItem = menu.findItem(R.id.action_share)
         shareActionProvider = MenuItemCompat.getActionProvider(shareButton) as ShareActionProvider
-        setShareActionIntent("Wanna check my categories?")
+        val productList = StringBuilder("")
+        categoryDAO.queryForEq("purchased", false).forEach {
+            productList.append(">>> " + it.categoryTitle + " <<< \n")
+            var allProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(it.categoryTitle, false)
+            for (product in allProducts) {
+                productList.append(product.productName + "\n")
+            }
+        }
+        setShareActionIntent(productList.toString())
         return super.onCreateOptionsMenu(menu)
     }
 
     private fun setShareActionIntent(message: String) {
-        val intent: Intent = Intent(Intent.ACTION_SEND)
+        val intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"
         intent.putExtra(Intent.EXTRA_TEXT, message)
         shareActionProvider.setShareIntent(intent)
     }
-
-    inner class CustomAdapter(context: Context, resource: Int, private val categories: List<CategoryDTO>): ArrayAdapter<CategoryDTO>(context, resource, categories) {
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-
-            var convertView = convertView
-            if (convertView == null) {
-                convertView = LayoutInflater.from(context).inflate(R.layout.item_category, parent, false)
-            }
-
-            val categoryNameField = convertView?.findViewById(R.id.category_title) as TextView
-            categoryNameField.text = categories[position].categoryTitle
-            categoryNameField.tag = "categoryTitle"
-            categoryNameField.isClickable = true
-            @TargetApi(26)
-            categoryNameField.isFocusable = true
-
-            categoryNameField.setOnClickListener { convertView ->
-                showProducts(convertView)
-            }
-
-            val deleteButton = convertView?.findViewById(R.id.delete_category) as Button
-            deleteButton.setOnClickListener {view ->
-                updateCategory(categories[position])
-            }
-
-            return convertView
-        }
-    }
-
 
     fun updateCategory(categoryDTO: CategoryDTO){
         try {
             var categoryToUpdate = databaseHelper.getCategoryById(categoryDTO.categoryId)
             categoryToUpdate.purchased = !categoryToUpdate.purchased
             categoryDAO.update(categoryToUpdate)
-            categoryListView.invalidateViews()
+            //categoryListView.invalidateViews()
             purchasedCategoryListView.invalidateViews()
         } catch (e: SQLException){
             e.printStackTrace()
@@ -161,11 +152,73 @@ class CategoryActivity : AppCompatActivity() {
             }
 
             val deleteButton = convertView?.findViewById(R.id.delete_item) as Button
-            deleteButton.setOnClickListener {view ->
+            deleteButton.setOnClickListener { view ->
                 removeCategory(position)
             }
 
             return convertView
         }
+    }
+
+
+    inner class RecyclerViewAdapter(private val categories: List<CategoryDTO>):
+        RecyclerView.Adapter<RecyclerViewAdapter.CategoryViewHolder>(), ItemMoveCallbackListener.Listener {
+        inner class CategoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+            private val categoryNameField = itemView.findViewById(R.id.category_title) as TextView
+            private val deleteButton = itemView.findViewById(R.id.delete_category) as Button
+
+            fun bind(category: CategoryDTO) {
+                categoryNameField.text = category.categoryTitle
+                categoryNameField.tag = "categoryTitle"
+                categoryNameField.isClickable = true
+                categoryNameField.setOnClickListener { view ->
+                    showProducts(view)
+                }
+                categoryNameField.setOnDragListener{ _, event ->
+                    if (event.action == MotionEvent.ACTION_DOWN) {
+                        touchHelper.startDrag(this)
+                    }
+                    return@setOnDragListener true
+                }
+
+                deleteButton.setOnClickListener {
+                    updateCategory(category)
+                }
+            }
+
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewAdapter.CategoryViewHolder {
+            val view =  LayoutInflater.from(parent.context).inflate(R.layout.item_category, parent, false)
+            return CategoryViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: RecyclerViewAdapter.CategoryViewHolder, position: Int) {
+            val category = categories[position]
+            holder.bind(category)
+        }
+
+        override fun getItemCount() = categories.size
+
+        override fun onRowMoved(fromPosition: Int, toPosition: Int) {
+            if (fromPosition < toPosition) {
+                for (i in fromPosition until toPosition) {
+                    Collections.swap(categories, i, i + 1)
+                }
+            } else {
+                for (i in fromPosition downTo toPosition + 1) {
+                    Collections.swap(categories, i, i - 1)
+                }
+            }
+            notifyItemMoved(fromPosition, toPosition)
+        }
+
+        override fun onRowSelected(itemViewHolder: CategoryViewHolder) {
+        }
+
+        override fun onRowClear(itemViewHolder: CategoryViewHolder) {
+        }
+
     }
 }

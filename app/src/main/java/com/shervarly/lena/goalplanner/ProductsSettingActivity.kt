@@ -3,12 +3,7 @@ package com.shervarly.lena.goalplanner
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.view.MenuItemCompat
-import android.support.v7.app.ActionBar
-import android.support.v7.widget.Toolbar
-import android.support.v7.widget.ShareActionProvider
 import android.view.*
 import android.widget.*
 import com.j256.ormlite.android.apptools.OpenHelperManager
@@ -17,8 +12,11 @@ import dbmodule.DatabaseHelper
 import dbmodule.ProductDTO
 import java.sql.SQLException
 import java.util.*
-import android.widget.TextView
-import android.widget.ArrayAdapter
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.ShareActionProvider
+import androidx.appcompat.widget.Toolbar
+import androidx.core.view.MenuItemCompat
 
 
 class ProductsSettingActivity : AppCompatActivity() {
