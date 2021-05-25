@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_gravity="center_vertical"
     android:paddingBottom="10dp"
     android:paddingTop="10dp"
@@ -23,13 +23,12 @@
         android:textAppearance="@style/TextAppearance.AppCompat"
         android:textSize="16sp" />
 
-    <CheckBox
-        android:id="@+id/product_purchased_status"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|center_vertical|end"
-        android:layout_marginEnd="15dp"
-        android:layout_marginRight="15dp"
-        />
+    <Button
+        android:id="@+id/product_done"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_marginRight="21dp"
+        android:background="@drawable/baseline_task_alt_24"
+        android:layout_gravity="center"/>
 
 </LinearLayout>

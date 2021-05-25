@@ -41,12 +41,11 @@
 
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/products_list"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_products"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    </ListView>
+        android:layout_height="wrap_content"
+        android:orientation="vertical"/>
 
     <LinearLayout
         android:layout_width="match_parent"

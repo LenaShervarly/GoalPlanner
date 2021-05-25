@@ -29,7 +29,7 @@ android:orientation="horizontal">
         android:id="@+id/delete_item"
         android:layout_width="29dp"
         android:layout_height="26dp"
-        android:layout_marginRight="21dp"
+        android:layout_marginRight="25dp"
         android:background="@drawable/icons8trash"
         android:layout_gravity="center"/>
 

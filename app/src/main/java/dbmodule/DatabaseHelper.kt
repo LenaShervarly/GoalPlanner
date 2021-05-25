@@ -15,23 +15,23 @@ import com.j256.ormlite.table.TableUtils
  * Created by elena on 27.01.2018.
  */
 var DATABASE_NAME: String = "GoalPlanner"
-val DATABASE_VERSION: Int = 1
+const val DATABASE_VERSION: Int = 1
 
 class DatabaseHelper(context: Context) : OrmLiteSqliteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     override fun onCreate(db: SQLiteDatabase?, connectionSource: ConnectionSource?) {
         try {
-            TableUtils.createTable<CategoryDTO>(connectionSource, CategoryDTO::class.java)
-            TableUtils.createTable<ProductDTO>(connectionSource, ProductDTO::class.java)
+            TableUtils.createTable(connectionSource, CategoryDTO::class.java)
+            TableUtils.createTable(connectionSource, ProductDTO::class.java)
         } catch (e: SQLException) {
             Log.e(DatabaseHelper::class.java.name, "Unable to create databases", e)
         }
     }
     override fun onUpgrade(db: SQLiteDatabase?, connectionSource: ConnectionSource?, oldVersion: Int, newVersion: Int) {
         try {
-            //TableUtils.dropTable<CategoryDTO, Any>(connectionSource, CategoryDTO::class.java, true)
-            //TableUtils.dropTable<ProductDTO, Any>(connectionSource, ProductDTO::class.java, true)
-            //onCreate(db, connectionSource)
+            TableUtils.dropTable<CategoryDTO, Any>(connectionSource, CategoryDTO::class.java, true)
+            TableUtils.dropTable<ProductDTO, Any>(connectionSource, ProductDTO::class.java, true)
+            onCreate(db, connectionSource)
         } catch (e: SQLException) {
             Log.e(DatabaseHelper::class.java.name, "Unable to upgrade database from version $oldVersion to new $newVersion", e)
         }
@@ -52,10 +52,10 @@ class DatabaseHelper(context: Context) : OrmLiteSqliteOpenHelper(context, DATABA
     }
 
     fun getProductsById(id: Int): ProductDTO {
-        return getProductsDao().filter { productDTO -> productDTO.productId == id }.first()
+        return getProductsDao().first { productDTO -> productDTO.productId == id }
     }
 
     fun getCategoryById(id: Int): CategoryDTO {
-        return getCategoryDao().filter { category -> category.categoryId == id }.first()
+        return getCategoryDao().first { category -> category.categoryId == id }
     }
 }

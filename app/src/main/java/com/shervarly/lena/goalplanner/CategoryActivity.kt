@@ -15,22 +15,23 @@ import androidx.appcompat.widget.ShareActionProvider
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuItemCompat
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.j256.ormlite.dao.Dao
 import dbmodule.CategoryDTO
 import dbmodule.DatabaseHelper
 import kotlinx.android.synthetic.main.item_category.view.*
-import java.lang.StringBuilder
 import java.util.*
 
 
 @RequiresApi(Build.VERSION_CODES.N)
 class CategoryActivity : AppCompatActivity() {
-    private lateinit var categoryListView: ListView
     private lateinit var purchasedCategoryListView: ListView
     private lateinit var categoryDAO: Dao<CategoryDTO, Int>
     private lateinit var databaseHelper: DatabaseHelper
-    lateinit var touchHelper: ItemTouchHelper
+    private lateinit var touchHelper: ItemTouchHelper
+    private var inEditMode = false
+    private lateinit var shareActionProvider: ShareActionProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,49 +55,48 @@ class CategoryActivity : AppCompatActivity() {
 
 
     private fun updateUI(){
-        categoryListView = findViewById(R.id.category_list)
+        val categoryTitles = categoryDAO.queryForEq("purchased", false).sortedBy { cat -> cat.order }
+        val purchasedCategoryTitles = categoryDAO.queryForEq("purchased", true)
         purchasedCategoryListView = findViewById(R.id.purchased_categories_list)
-        val categoryTitles = categoryDAO.queryForEq("purchased", false);
-        val purchasedCategoryTitles = categoryDAO.queryForEq("purchased", true);
-        purchasedCategoryListView.adapter = PurchasedCategoriesAdapter(this, R.layout.item_purchased, purchasedCategoryTitles)
+        purchasedCategoryListView.adapter =
+            PurchasedCategoriesAdapter(this, R.layout.item_purchased, purchasedCategoryTitles)
 
-        val recyclerView: RecyclerView = findViewById(R.id.recycler_view)
-        val adapter = RecyclerViewAdapter( categoryTitles)
+        val categoryRecyclerView: RecyclerView = findViewById(R.id.recycler_view)
+        val adapter = CategoryViewAdapter( categoryTitles)
         val callback: ItemTouchHelper.Callback = ItemMoveCallbackListener(adapter)
         touchHelper = ItemTouchHelper(callback)
-        touchHelper.attachToRecyclerView(recyclerView)
-        recyclerView.adapter = adapter
+        touchHelper.attachToRecyclerView(categoryRecyclerView)
+        categoryRecyclerView.adapter = adapter
+        categoryRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
     fun addCategory(view: View){
         val categoryField: EditText = (view.parent as View).findViewById(R.id.new_Category)
-        val categoryTitle = categoryField.text.toString().capitalize()
+        val categoryTitle = categoryField.text.toString().capitalize(Locale.ROOT)
 
-        val newCategory = CategoryDTO(0, categoryTitle, false)
+        val newCategory = CategoryDTO(0, categoryTitle, false,
+            categoryDAO.queryForEq("purchased", false).size)
         categoryDAO.create(newCategory)
         updateUI()
         categoryField.text.clear()
     }
 
     fun resetCategory(view: View) {
-        var purchasedProducts = categoryDAO.queryForAll()
+        val purchasedProducts = categoryDAO.queryForAll()
         purchasedProducts.forEach { category -> category.purchased = false
             categoryDAO.update(category)
         }
         updateUI()
     }
 
-    fun removeCategory(position: Int){
+    fun removeCategory(category: CategoryDTO){
         try {
-            categoryDAO.delete(categoryDAO.queryForAll()[position])
-            categoryListView.invalidateViews()
+            categoryDAO.delete(category)
         } catch (e: SQLException){
             e.printStackTrace()
         }
         updateUI()
     }
-
-    lateinit var shareActionProvider: ShareActionProvider
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
@@ -105,7 +105,7 @@ class CategoryActivity : AppCompatActivity() {
         val productList = StringBuilder("")
         categoryDAO.queryForEq("purchased", false).forEach {
             productList.append(">>> " + it.categoryTitle + " <<< \n")
-            var allProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(it.categoryTitle, false)
+            val allProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(it.categoryTitle, false)
             for (product in allProducts) {
                 productList.append(product.productName + "\n")
             }
@@ -121,12 +121,11 @@ class CategoryActivity : AppCompatActivity() {
         shareActionProvider.setShareIntent(intent)
     }
 
-    fun updateCategory(categoryDTO: CategoryDTO){
+    fun updatePurchasedStatus(categoryDTO: CategoryDTO){
         try {
-            var categoryToUpdate = databaseHelper.getCategoryById(categoryDTO.categoryId)
+            val categoryToUpdate = databaseHelper.getCategoryById(categoryDTO.categoryId)
             categoryToUpdate.purchased = !categoryToUpdate.purchased
             categoryDAO.update(categoryToUpdate)
-            //categoryListView.invalidateViews()
             purchasedCategoryListView.invalidateViews()
         } catch (e: SQLException){
             e.printStackTrace()
@@ -134,11 +133,12 @@ class CategoryActivity : AppCompatActivity() {
         updateUI()
     }
 
-    inner class PurchasedCategoriesAdapter(context: Context, resource: Int, private val purchasedCategories: List<CategoryDTO>): ArrayAdapter<CategoryDTO>(context, resource, purchasedCategories) {
+    inner class PurchasedCategoriesAdapter(context: Context, resource: Int, private val purchasedCategories: List<CategoryDTO>):
+            ArrayAdapter<CategoryDTO>(context, resource, purchasedCategories) {
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
+        override fun getView(position: Int, viewParam: View?, parent: ViewGroup): View {
 
-            var convertView = convertView
+            var convertView = viewParam
             if (convertView == null) {
                 convertView = LayoutInflater.from(context).inflate(R.layout.item_purchased, parent, false)
             }
@@ -147,13 +147,14 @@ class CategoryActivity : AppCompatActivity() {
             categoryNameField.text = purchasedCategories[position].categoryTitle
             categoryNameField.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
 
-            categoryNameField.setOnClickListener { convertView ->
-                updateCategory(purchasedCategories[position])
+            categoryNameField.setOnClickListener {
+                updatePurchasedStatus(purchasedCategories[position])
             }
 
-            val deleteButton = convertView?.findViewById(R.id.delete_item) as Button
-            deleteButton.setOnClickListener { view ->
-                removeCategory(position)
+            val deleteButton = convertView.findViewById(R.id.delete_item) as Button
+            deleteButton.setOnClickListener {
+                val categoryToRemove = purchasedCategories[position]
+                removeCategory(categoryToRemove)
             }
 
             return convertView
@@ -161,12 +162,14 @@ class CategoryActivity : AppCompatActivity() {
     }
 
 
-    inner class RecyclerViewAdapter(private val categories: List<CategoryDTO>):
-        RecyclerView.Adapter<RecyclerViewAdapter.CategoryViewHolder>(), ItemMoveCallbackListener.Listener {
+    inner class CategoryViewAdapter(private val categories: List<CategoryDTO>): IAdapter,
+        RecyclerView.Adapter<CategoryViewAdapter.CategoryViewHolder>(), ItemMoveCallbackListener.Listener {
         inner class CategoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
             private val categoryNameField = itemView.findViewById(R.id.category_title) as TextView
             private val deleteButton = itemView.findViewById(R.id.delete_category) as Button
+            private val editButton = itemView.findViewById(R.id.edit_category) as Button
+            private val editCategoryField = itemView.findViewById(R.id.edit_Category_field) as EditText
 
             fun bind(category: CategoryDTO) {
                 categoryNameField.text = category.categoryTitle
@@ -183,18 +186,32 @@ class CategoryActivity : AppCompatActivity() {
                 }
 
                 deleteButton.setOnClickListener {
-                    updateCategory(category)
+                    updatePurchasedStatus(category)
+                }
+
+                editButton.setOnClickListener {
+                    if (!inEditMode) {
+                        editCategoryField.visibility = View.VISIBLE
+                        editCategoryField.hint = category.categoryTitle
+                        categoryNameField.visibility = View.INVISIBLE
+                    } else {
+                        category.categoryTitle = editCategoryField.text.toString().capitalize(Locale.ROOT)
+                        categoryDAO.update(category)
+                        editCategoryField.visibility = View.INVISIBLE
+                        categoryNameField.visibility = View.VISIBLE
+                        updateUI()
+                    }
+                    inEditMode = !inEditMode
                 }
             }
-
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewAdapter.CategoryViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewAdapter.CategoryViewHolder {
             val view =  LayoutInflater.from(parent.context).inflate(R.layout.item_category, parent, false)
             return CategoryViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: RecyclerViewAdapter.CategoryViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: CategoryViewAdapter.CategoryViewHolder, position: Int) {
             val category = categories[position]
             holder.bind(category)
         }
@@ -211,6 +228,11 @@ class CategoryActivity : AppCompatActivity() {
                     Collections.swap(categories, i, i - 1)
                 }
             }
+            val currentOrder = categories[fromPosition].order
+            categories[fromPosition].order = categories[toPosition].order
+            categories[toPosition].order = currentOrder
+            categoryDAO.update(categories[fromPosition])
+            categoryDAO.update(categories[toPosition])
             notifyItemMoved(fromPosition, toPosition)
         }
 

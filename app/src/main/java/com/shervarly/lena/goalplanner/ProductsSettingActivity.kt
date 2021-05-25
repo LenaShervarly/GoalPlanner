@@ -1,7 +1,6 @@
 package com.shervarly.lena.goalplanner
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
 import android.view.*
@@ -14,70 +13,48 @@ import java.sql.SQLException
 import java.util.*
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.ShareActionProvider
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.MenuItemCompat
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 
 class ProductsSettingActivity : AppCompatActivity() {
-    private lateinit var productsListView: ListView
-    private lateinit var purchasedPoductsListView: ListView
+    private lateinit var purchasedProductsListView: ListView
     private lateinit var categoryTitle: String
     private lateinit var productDAO: Dao<ProductDTO, Int>
-    private var allProducts: List<ProductDTO> = ArrayList()
+    private var productsToBuy: List<ProductDTO> = ArrayList()
     private var purchasedProducts: List<ProductDTO> = ArrayList()
     private lateinit var databaseHelper: DatabaseHelper
-    lateinit var shareActionProvider: ShareActionProvider
+    private lateinit var touchHelper: ItemTouchHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_products_setting)
 
-        categoryTitle = intent.getStringExtra(CATEGORY_TITLE)
-        val textForMyTitle = "$categoryTitle"
+        categoryTitle = intent.getStringExtra(CATEGORY_TITLE) ?: ""
 
         val toolbar: Toolbar? = findViewById(R.id.toolbar)
         if (toolbar != null) {
             setSupportActionBar(toolbar)
-            supportActionBar?.title = textForMyTitle
+            supportActionBar?.title = categoryTitle
         }
-        var actionBar: ActionBar? = supportActionBar
+        val actionBar: ActionBar? = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
         databaseHelper = getDBHelper()
         productDAO = databaseHelper.getProductsDao()
 
-        productsListView = findViewById(R.id.products_list)
-        purchasedPoductsListView = findViewById(R.id.purchased_products_list)
+        purchasedProductsListView = findViewById(R.id.purchased_products_list)
         updateUI()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        val shareButton: MenuItem = menu.findItem(R.id.action_share)
-        shareActionProvider = MenuItemCompat.getActionProvider(shareButton) as ShareActionProvider
-        val message = StringBuilder()
-        message.append("Just look! My products for the next  are: \n")
-        productDAO.queryForAll()
-                .map { productDTO -> productDTO.productName }
-                .forEach{productName -> message.append(productName + "\n")}
-        setShareActionIntent(message.toString())
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    private fun setShareActionIntent(message: String) {
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.type = "text/plain"
-        intent.putExtra(Intent.EXTRA_TEXT, message)
-        shareActionProvider.setShareIntent(intent)
     }
 
     fun addProduct(view: View){
         val productsTextView: EditText = (view.parent as View).findViewById(R.id.new_product)
-        val productName = productsTextView.text.toString().capitalize()
+        val productName = productsTextView.text.toString().capitalize(Locale.ROOT)
 
         val purchased = false
-        val newProduct = ProductDTO(0, categoryTitle, productName, purchased )
+        val newProduct = ProductDTO(0, categoryTitle, productName, purchased, productsToBuy.size )
 
         productDAO.createIfNotExists(newProduct)
         updateUI()
@@ -85,7 +62,7 @@ class ProductsSettingActivity : AppCompatActivity() {
     }
 
     fun resetBasket(view: View) {
-        var purchasedProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(categoryTitle, true)
+        val purchasedProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(categoryTitle, true)
         purchasedProducts.forEach {
             product -> product.purchased = false
             productDAO.update(product)
@@ -97,9 +74,9 @@ class ProductsSettingActivity : AppCompatActivity() {
         return OpenHelperManager.getHelper(this, DatabaseHelper::class.java)
     }
 
-    fun updateProduct(product: ProductDTO){
+    fun updatePurchasedStatus(product: ProductDTO){
         try {
-            var productToUpdate = databaseHelper.getProductsById(product.productId)
+            val productToUpdate = databaseHelper.getProductsById(product.productId)
             productToUpdate.purchased = !productToUpdate.purchased
             productDAO.update(productToUpdate)
         } catch (e: SQLException){
@@ -109,58 +86,106 @@ class ProductsSettingActivity : AppCompatActivity() {
     }
 
     private fun updateUI(){
-        allProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(categoryTitle, false)
+        productsToBuy = databaseHelper.getProductsByCategoryAndPurchasedStatus(categoryTitle, false).sortedBy { prod -> prod.order }
         purchasedProducts = databaseHelper.getProductsByCategoryAndPurchasedStatus(categoryTitle, true)
-        productsListView.adapter = CustomAdapter(this, R.layout.item, allProducts)
-        purchasedPoductsListView.adapter = PurchasedCustomAdapter(this, R.layout.item_purchased, purchasedProducts)
+        purchasedProductsListView.adapter = PurchasedCustomAdapter(this, R.layout.item_purchased, purchasedProducts)
+
+        val productsRecyclerView: RecyclerView = findViewById(R.id.recycler_view_products)
+        val adapter = ProductsAdapter( productsToBuy)
+        val callback: ItemTouchHelper.Callback = ItemMoveCallbackListener(adapter)
+        touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(productsRecyclerView)
+        productsRecyclerView.adapter = adapter
+        productsRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    fun removeProduct(position: Int){
+    fun removeProduct(product: ProductDTO){
         try {
-            productDAO.delete(productDAO.queryForAll()[position])
+            productDAO.delete(product)
         } catch (e: SQLException){
             e.printStackTrace()
         }
         updateUI()
     }
 
-    inner class CustomAdapter(context: Context, resource: Int, private val productsToBuy: List<ProductDTO>): ArrayAdapter<ProductDTO>(context, resource, productsToBuy) {
+    inner class ProductsAdapter(private val products: List<ProductDTO>): IAdapter,
+        RecyclerView.Adapter<ProductsSettingActivity.ProductsAdapter.ProductViewHolder>(), ItemMoveCallbackListener.Listener {
+        inner class ProductViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-            var convertView = convertView
-            if (convertView == null)
-                convertView = LayoutInflater.from(context).inflate(R.layout.item, parent, false)
+            private val productNameField = itemView.findViewById(R.id.product_title) as TextView
+            private val productPurchasedCheckBox = itemView.findViewById(R.id.product_done) as Button
 
-            val productNameField = convertView?.findViewById(R.id.product_title) as TextView
-            val productPurchasedCheckBox = convertView?.findViewById(R.id.product_purchased_status) as CheckBox
+            fun bind(productDTO: ProductDTO) {
+                productPurchasedCheckBox.setOnClickListener {
+                    updatePurchasedStatus(productDTO)
+                }
+                productNameField.text = productDTO.productName
 
-            productPurchasedCheckBox.setOnClickListener { view ->
-                productPurchasedCheckBox.isChecked = true
-                updateProduct(productsToBuy[position])
+                productNameField.setOnDragListener { _, event ->
+                    if (event.action == MotionEvent.ACTION_DOWN) {
+                        touchHelper.startDrag(this)
+                    }
+                    return@setOnDragListener true
+                }
             }
-            productNameField.text = productsToBuy[position].productName
-
-            return convertView
         }
+
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int):
+                    ProductsSettingActivity.ProductsAdapter.ProductViewHolder {
+                val view =  LayoutInflater.from(parent.context).inflate(R.layout.item_product, parent, false)
+                return ProductViewHolder(view)
+            }
+
+            override fun onBindViewHolder(holder: ProductsSettingActivity.ProductsAdapter.ProductViewHolder, position: Int) {
+                val product = products[position]
+                holder.bind(product)
+            }
+
+            override fun getItemCount() = products.size
+
+            override fun onRowMoved(fromPosition: Int, toPosition: Int) {
+                if (fromPosition < toPosition) {
+                    for (i in fromPosition until toPosition) {
+                        Collections.swap(products, i, i + 1)
+                    }
+                } else {
+                    for (i in fromPosition downTo toPosition + 1) {
+                        Collections.swap(products, i, i - 1)
+                    }
+                }
+                val currentOrder = products[fromPosition].order
+                products[fromPosition].order = products[toPosition].order
+                products[toPosition].order = currentOrder
+                productDAO.update(products[fromPosition])
+                productDAO.update(products[toPosition])
+                notifyItemMoved(fromPosition, toPosition)
+            }
+
+            override fun onRowSelected(itemViewHolder: CategoryActivity.CategoryViewAdapter.CategoryViewHolder) {
+            }
+
+            override fun onRowClear(itemViewHolder: CategoryActivity.CategoryViewAdapter.CategoryViewHolder) {
+            }
     }
 
     inner class PurchasedCustomAdapter(context: Context, resource: Int, private val purchasedProducts: List<ProductDTO>): ArrayAdapter<ProductDTO>(context, resource, purchasedProducts) {
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-            var convertView = convertView
+        override fun getView(position: Int, viewParam: View?, parent: ViewGroup): View {
+            var convertView = viewParam
             if (convertView == null)
                 convertView = LayoutInflater.from(context).inflate(R.layout.item_purchased, parent, false)
 
             val productNameField = convertView?.findViewById(R.id.purchased_title) as TextView
             productNameField.text = purchasedProducts[position].productName
             productNameField.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
-            productNameField.setOnClickListener {view ->
-                updateProduct(purchasedProducts[position])
+            productNameField.setOnClickListener {
+                updatePurchasedStatus(purchasedProducts[position])
             }
 
-            val deleteButton = convertView?.findViewById(R.id.delete_item) as Button
-            deleteButton.setOnClickListener {view ->
-                removeProduct(position)
+            val deleteButton = convertView.findViewById(R.id.delete_item) as Button
+            deleteButton.setOnClickListener {
+                val productToDelete = purchasedProducts[position]
+                removeProduct(productToDelete)
             }
 
             return convertView
